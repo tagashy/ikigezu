@@ -31,6 +31,8 @@ int isFile(char* path);
 int main()
 {
 
+	signal(SIGINT, SIG_IGN);
+	signal(SIGINT, handle_signal);
 		shell();
 	
 return 0;
@@ -42,15 +44,17 @@ void shell()
 	char c;
 	char tmp[100];/* = (char *)malloc(sizeof(char) * 100);*/
 
-	signal(SIGINT, SIG_IGN);
-	signal(SIGINT, handle_signal);
 	printf("ikigezu>");
 	while(c != EOF) {
 		c = getchar();
 		switch(c) {
-			case '\n': if(tmp[0] == '\0') {
+	case '\n': if(tmp[0] == '\0') {
 					   printf("ikigezu>");
 				   } else {
+					   if(!strcmp(tmp,"exit")||!strcmp(tmp,"quit"))
+					   {
+						   exit(0);
+					   }
 					   verifPath(tmp);
 					   printf("ikigezu>");
 				   }
@@ -58,7 +62,7 @@ void shell()
 				   strncpy(history,tmp,100);
 				   memset(tmp,'\0', 100);
 				   break;
-				case 27:printf("first Lock: open\n");
+	case 27:printf("first Lock: open\n");
 				strncat(tmp, &c, 1);
 				c = getchar();
 				if (c=='[')
@@ -70,25 +74,16 @@ void shell()
 					memset(tmp,'\0', 100);
 					strncpy(tmp,history,100);
 					printf("ikigezu>%s",tmp);
-					fflush(stdout);
+					break;
 					}
 				}
+				fflush(stdout);
 				break;
 	default: strncat(tmp, &c, 1);
 				 break;
 		}
 	}
-	/*
-char input[100];
-printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	while(1==1)
-	{	
-	printf("ikigezu>");
-	fgets(input, sizeof input, stdin);
-	search(input);
-	verifPath(input);
-	}
-	*/
+
 }
 
 
@@ -105,28 +100,17 @@ char commande[200];
 int exist;
 char *chemin;
 
-
-
-
 strcpy(commande,input);
 path = getenv("PATH");
 fichier=strtok(commande," ");
 argument=strtok(NULL,"\0");
-printf("commande : '%s'\n",fichier);
-printf("argument : '%s'\n",argument);
-printf("PATH : '%s'\n",path);
 strcpy(cppath,path);
-printf("CPPATH : '%s'\n",cppath);
 token=strtok(cppath,SPATH);
-
-
-
  
 while ( token != NULL )
 {
 	exist=0;
 	strcpy(cptoken,token);
-	printf("chemin actuel: '%s'\n",cptoken);
 	strcat(cptoken,ARBORESCENCE);
 	chemin=strcat(cptoken,fichier);
 	exist=isFile(chemin);
@@ -141,32 +125,6 @@ while ( token != NULL )
 return 0;
 }
 
-static void purger()
-{
-
-    int c;
-
-    while ((c = getchar()) != '\n' && c != EOF)
-
-    {}
-
-}
-
-static void search(char chaine[])
-{
-
-    char *p = strchr(chaine, '\n');
-    if (p)
-
-    {
-        *p = '\0';
-    }
-	else
-	{
-	purger();
-	}
-
-}
 
 int isFile(char* dir)
 {
@@ -193,7 +151,52 @@ int isFile(char* dir)
 	}
 }
 
+int execProg(char nom[],char args[])
+{
+	char *arguments[] = {nom,args,NULL}
+	pid_t pid = create_process();
 
+    switch (pid) {
+    /* Si on a une erreur irrémédiable (ENOMEM dans notre cas) */
+    case -1:
+	perror("fork");
+	return EXIT_FAILURE;
+	break;
+    /* Si on est dans le fils */
+    case 0:
+	son_process(arg);
+	break;
+    /* Si on est dans le père */
+    default:
+	father_process();
+	break;
+    }
+	if(PID==0)
+	{
+		execv()
+	}
+	
+}
+pid_t create_process(void)
+{
+
+    /* On crée une nouvelle valeur de type pid_t */
+
+    pid_t pid;
+
+    /* On fork() tant que l'erreur est EAGAIN */
+
+    do {
+
+    pid = fork();
+
+    } while ((pid == -1) && (errno == EAGAIN));
+
+    /* On retourne le PID du processus ainsi créé */
+
+    return pid;
+
+}
 void handle_signal(int signo)
 {
 	printf("\ndefqon1#");
