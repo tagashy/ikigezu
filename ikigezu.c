@@ -23,8 +23,6 @@
 
 void handle_signal(int signo);
 int verifPath();
-static void purger();
-static void search(char *chaine);
 void shell();
 int isFile(char* path);
 
@@ -151,52 +149,7 @@ int isFile(char* dir)
 	}
 }
 
-int execProg(char nom[],char args[])
-{
-	char *arguments[] = {nom,args,NULL}
-	pid_t pid = create_process();
 
-    switch (pid) {
-    /* Si on a une erreur irrémédiable (ENOMEM dans notre cas) */
-    case -1:
-	perror("fork");
-	return EXIT_FAILURE;
-	break;
-    /* Si on est dans le fils */
-    case 0:
-	son_process(arg);
-	break;
-    /* Si on est dans le père */
-    default:
-	father_process();
-	break;
-    }
-	if(PID==0)
-	{
-		execv()
-	}
-	
-}
-pid_t create_process(void)
-{
-
-    /* On crée une nouvelle valeur de type pid_t */
-
-    pid_t pid;
-
-    /* On fork() tant que l'erreur est EAGAIN */
-
-    do {
-
-    pid = fork();
-
-    } while ((pid == -1) && (errno == EAGAIN));
-
-    /* On retourne le PID du processus ainsi créé */
-
-    return pid;
-
-}
 void handle_signal(int signo)
 {
 	printf("\ndefqon1#");
