@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ncurses.h> 
 
 #ifdef WIN32
 #define SPATH ";"
@@ -61,7 +62,6 @@ void shell()
 				   memset(tmp,'\0', 100);
 				   break;
 	case 27:printf("first Lock: open\n");
-				strncat(tmp, &c, 1);
 				c = getchar();
 				if (c=='[')
 				{
@@ -154,4 +154,10 @@ void handle_signal(int signo)
 {
 	printf("\ndefqon1#");
 	fflush(stdout);
+}
+
+void unix_clear_screen(void) 
+{ 
+    clear(); 
+    move(0, 0); 
 }
