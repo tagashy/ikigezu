@@ -1,0 +1,43 @@
+#include <termios.h> 
+#include <unistd.h> 
+  
+void mode_raw(int activer) 
+{ 
+    static struct termios cooked; 
+    static int raw_actif = 0; 
+  
+    if (raw_actif == activer) 
+        return; 
+  
+    if (activer) 
+    { 
+        struct termios raw; 
+  
+        tcgetattr(STDIN_FILENO, &cooked); 
+  
+        raw = cooked; 
+        cfmakeraw(&raw); 
+        tcsetattr(STDIN_FILENO, TCSANOW, &raw); 
+    } 
+    else 
+        tcsetattr(STDIN_FILENO, TCSANOW, &cooked); 
+  
+    raw_actif = activer; 
+}
+int main()
+{
+	char c;
+	char tmp[100];
+	while(c != EOF) {
+c = getchar();
+switch(c) {
+	case '\r': putc('\r',stdout);
+	putc('\n',stdout);
+	break;
+	case EOF: exit(0);
+	break;
+	default: putc(c,stdout);
+	break;
+	}
+	}
+}
