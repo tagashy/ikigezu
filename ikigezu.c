@@ -1,18 +1,18 @@
-#include <dirent.h>
+#include <termios.h> 
+#include <unistd.h> 
+  #include <dirent.h>
 #include <sys/types.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <ncurses.h> 
-
+#define BUFFER 256
 #ifdef WIN32
 #define SPATH ";"
 #define ARBORESCENCE "\\"
@@ -20,70 +20,81 @@
 #define SPATH ":"
 #define ARBORESCENCE "/"
 #endif
-
-
-void handle_signal(int signo);
+void cexit(void);
+void mode_raw(int activer);
 int verifPath();
-void shell();
 int isFile(char* path);
-
+void unix_clear_screen(void);
 int main()
 {
-
-	signal(SIGINT, SIG_IGN);
-	signal(SIGINT, handle_signal);
-		shell();
-	
-return 0;
-}
-
-void shell()
-{
-	char history[100];
+	mode_raw(1);
 	char c;
-	char tmp[100];/* = (char *)malloc(sizeof(char) * 100);*/
-
+	char history[BUFFER];
+	char tmp[BUFFER];
 	printf("ikigezu>");
 	while(c != EOF) {
-		c = getchar();
-		switch(c) {
-	case '\n': if(tmp[0] == '\0') {
+c = getchar();
+switch(c) {
+	case '\r': putc('\r',stdout);
+	putc('\n',stdout);
+	if(tmp[0] == '\0') {
 					   printf("ikigezu>");
-				   } else {
-					   if(!strcmp(tmp,"exit")||!strcmp(tmp,"quit"))
+				   } else {if(!strcmp(tmp,"exit")||!strcmp(tmp,"quit"))
 					   {
-						   exit(0);
+						   cexit();
 					   }
 					   verifPath(tmp);
-					   printf("ikigezu>");
+					   
+					    printf("ikigezu>");
 				   }
 				   memset(history,'\0', 100);
 				   strncpy(history,tmp,100);
 				   memset(tmp,'\0', 100);
-				   break;
-	case 27:printf("first Lock: open\n");
-				c = getchar();
-				if (c=='[')
-				{
-					printf("second Lock: open\n");
-					c = getchar();
-					switch(c) {
-					case 'A':printf("third Lock: open\n");
-					memset(tmp,'\0', 100);
-					strncpy(tmp,history,100);
-					printf("ikigezu>%s",tmp);
-					break;
-					}
-				}
-				fflush(stdout);
+	break;
+	case EOF:cexit();
+	break;
+	case 3:printf("\r\ndefqon1#");
+	break; 
+	case 4:cexit();
+	break;
+	case 27:c=getchar();
+		if (c=='[')
+		{
+			switch(c){
+				case 'A':putc('A',stdout);
 				break;
-	default: strncat(tmp, &c, 1);
-				 break;
+				}
 		}
+	break;
+	default: strncat(tmp, &c, 1);
+	putc(c,stdout);
+	break;
 	}
-
+	}
 }
-
+void mode_raw(int activer) 
+{ 
+    static struct termios cooked; 
+    static int raw_actif = 0; 
+  
+    if (raw_actif == activer) 
+        return; 
+  
+    if (activer) 
+    { 
+        struct termios raw; 
+  
+        tcgetattr(STDIN_FILENO, &cooked); 
+  
+        raw = cooked; 
+        cfmakeraw(&raw); 
+        tcsetattr(STDIN_FILENO, TCSANOW, &raw); 
+    } 
+    else 
+        tcsetattr(STDIN_FILENO, TCSANOW, &cooked); 
+  
+    raw_actif = activer; 
+}
 
 int verifPath(char input[])
 {
@@ -91,10 +102,10 @@ int verifPath(char input[])
 char *fichier;
 char *argument;
 char *path;
-char cppath[100];
+char cppath[BUFFER];
 char *token;
-char cptoken[100];
-char commande[200];
+char cptoken[BUFFER];
+char commande[BUFFER];
 int exist;
 char *chemin;
 
@@ -114,8 +125,8 @@ while ( token != NULL )
 	exist=isFile(chemin);
 	if (exist)
 	{
-		printf("FOUND : '%s'\n",chemin);
-		printf("argument : '%s'\n",argument);
+		printf("FOUND : '%s'\r\n",chemin);
+		printf("argument : '%s'\r\n",argument);
 	}
 	
 	token=strtok(NULL,SPATH);
@@ -149,15 +160,10 @@ int isFile(char* dir)
 	}
 }
 
-
-void handle_signal(int signo)
+void cexit(void)
 {
-	printf("\ndefqon1#");
-	fflush(stdout);
-}
-
-void unix_clear_screen(void) 
-{ 
-    clear(); 
-    move(0, 0); 
+	
+	mode_raw(0);
+	putc('\n',stdout);
+	exit(0);
 }
