@@ -1,6 +1,18 @@
 #include <termios.h> 
 #include <unistd.h> 
-  
+  #include <dirent.h>
+#include <sys/types.h>
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <ctype.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 void mode_raw(int activer) 
 { 
     static struct termios cooked; 
@@ -27,7 +39,6 @@ void mode_raw(int activer)
 int main()
 {
 	char c;
-	char tmp[100];
 	while(c != EOF) {
 c = getchar();
 switch(c) {
