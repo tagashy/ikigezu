@@ -38,6 +38,7 @@ void mode_raw(int activer)
 }
 int main()
 {
+	mode_raw(1);
 	char c;
 	while(c != EOF) {
 c = getchar();
@@ -45,7 +46,8 @@ switch(c) {
 	case '\r': putc('\r',stdout);
 	putc('\n',stdout);
 	break;
-	case EOF: exit(0);
+	case EOF:mode_raw(0);
+	exit(0);
 	break;
 	default: putc(c,stdout);
 	break;
