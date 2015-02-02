@@ -31,6 +31,7 @@ int main()
 	char c;
 	char history[BUFFER];
 	char tmp[BUFFER];
+	memset(tmp,'\0', 100);
 	printf("ikigezu>");
 	while(c != EOF) {
 c = getchar();
@@ -43,6 +44,7 @@ switch(c) {
 					   {
 						   cexit();
 					   }
+					   #printf("\r\nbuffer='%s'\r\n",tmp);
 					   verifPath(tmp);
 					   
 					    printf("ikigezu>");
@@ -53,9 +55,21 @@ switch(c) {
 	break;
 	case EOF:cexit();
 	break;
-	case 3:printf("\r\ndefqon1#");
+	case 3:memset(tmp,'\0', 100);
+	printf("\r\ndefqon1#");
 	break; 
 	case 4:cexit();
+	break;
+	case 8:
+	tmp[strlen(tmp)-1]='\0';
+	printf("\033[1D");
+	putc(' ',stdout);
+	printf("\033[1D");
+	case 127:
+	tmp[strlen(tmp)-1]='\0';
+	printf("\033[1D");
+	putc(' ',stdout);
+	printf("\033[1D");
 	break;
 	case 27:c=getchar();
 		if (c=='[')
@@ -66,7 +80,7 @@ switch(c) {
 				}
 		}
 	break;
-	default: strncat(tmp, &c, 1);
+	default:strncat(tmp, &c, 1);
 	putc(c,stdout);
 	break;
 	}
