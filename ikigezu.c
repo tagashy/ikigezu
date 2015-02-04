@@ -2,17 +2,21 @@
 #include <unistd.h> 
   #include <dirent.h>
 #include <sys/types.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <sys/types.h>
+
 #include <ctype.h>
 #include <errno.h>
-#include <sys/stat.h>
+
 #include <fcntl.h>
-#define BUFFER 256
+#define BUFFER 4096
 #ifdef WIN32
 #define SPATH ";"
 #define ARBORESCENCE "\\"
@@ -25,6 +29,9 @@ void mode_raw(int activer);
 int verifPath();
 int isFile(char* path);
 void unix_clear_screen(void);
+void attent(pid_t pid);
+void execute(char *nom,char *argument);
+
 int main()
 {
 	mode_raw(1);
@@ -44,7 +51,7 @@ switch(c) {
 					   {
 						   cexit();
 					   }
-					   #printf("\r\nbuffer='%s'\r\n",tmp);
+					   /*printf("\r\nbuffer='%s'\r\n",tmp);*/
 					   verifPath(tmp);
 					   
 					    printf("ikigezu>");
@@ -85,7 +92,9 @@ switch(c) {
 	break;
 	}
 	}
+	return 0;
 }
+
 void mode_raw(int activer) 
 { 
     static struct termios cooked; 
@@ -115,18 +124,23 @@ int verifPath(char input[])
 
 char *fichier;
 char *argument;
+/*
 char *path;
 char cppath[BUFFER];
 char *token;
-char cptoken[BUFFER];
+*/
+
 char commande[BUFFER];
+/*
+char cptoken[BUFFER];
 int exist;
 char *chemin;
-
+*/
 strcpy(commande,input);
-path = getenv("PATH");
+/*path = getenv("PATH");*/
 fichier=strtok(commande," ");
 argument=strtok(NULL,"\0");
+/*
 strcpy(cppath,path);
 token=strtok(cppath,SPATH);
  
@@ -145,6 +159,8 @@ while ( token != NULL )
 	
 	token=strtok(NULL,SPATH);
 }
+*/
+execute(fichier,argument);
 return 0;
 }
 
@@ -180,4 +196,55 @@ void cexit(void)
 	mode_raw(0);
 	putc('\n',stdout);
 	exit(0);
+}
+
+void execute(char *nom,char *argument)
+{
+  pid_t pid;
+   if(argument==NULL)
+   {
+	   argument=" ";
+   }
+  char *arguments[] = { argument, NULL };
+
+  pid = fork();
+  if (pid < 0) {
+    printf("fork a échoué (%s)\r\n",strerror(errno));
+    return;
+  }
+
+  if (pid==0) {
+    /* fils */
+	printf("valeur de nom :'%s',\r\nvaleur de argument:'%s'\r\n",nom,argument);
+   
+	execvp(nom,arguments);
+
+    /* on n'arrive ici que si le exec a échoué */
+    printf("impossible d'éxecuter \"%s\" (%s)\r\n",nom,strerror(errno));
+    exit(1);
+  }
+  else {
+    /* père */
+    attent(pid);
+  }
+}
+
+/* attent la fin du processus pid */
+void attent(pid_t pid)
+{
+  /* il faut boucler car waitpid peut retourner avec une erreur non fatale */
+  while (1) {
+    int status;
+    int r = waitpid(pid,&status,0); /* attente bloquante */
+    if (r<0) { 
+      if (errno==EINTR) continue; /* interrompu => on recommence à attendre */
+      printf("erreur de waitpid (%s)\r\n",strerror(errno));
+      break;
+    }
+    if (WIFEXITED(status))
+      printf("terminaison normale, status %i \r\n",WEXITSTATUS(status));
+    if (WIFSIGNALED(status))
+      printf("terminaison par signal %i \r\n",WTERMSIG(status));
+    break;
+  }
 }
