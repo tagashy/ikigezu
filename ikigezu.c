@@ -24,12 +24,13 @@
 #define SPATH ":"
 #define ARBORESCENCE "/"
 #endif
+#define MAXELEMS 32
 void cexit(void);
 void mode_raw(int activer);
 int verifPath();
 void unix_clear_screen(void);
 void attent(pid_t pid);
-void execute(char *nom,char *argument);
+void execute(char **argument);
 
 int main()
 {
@@ -109,7 +110,7 @@ void mode_raw(int activer)
   
         tcgetattr(STDIN_FILENO, &cooked); 
   
-        raw = cooked; 
+		raw = cooked; 
         cfmakeraw(&raw); 
         tcsetattr(STDIN_FILENO, TCSANOW, &raw); 
     } 
@@ -121,17 +122,21 @@ void mode_raw(int activer)
 
 int verifPath(char input[])
 {
-
-char *fichier;
-char *argument;
-char commande[BUFFER];
-strcpy(commande,input);
-fichier=strtok(commande," ");
-argument=strtok(NULL,"\0");
-execute(fichier,argument);
+char* carac=input;
+char *argument[MAXELEMS];
+int i;
+for (i=0; i<MAXELEMS-1; i++) {
+argument[i]=carac;
+while(*carac && *carac!=' ') carac++;
+if (*carac){
+	*carac='\0';
+	carac++;
+}
+}
+argument[i]=NULL;
+execute(argument);
 return 0;
 }
-
 
 void cexit(void)
 {
@@ -141,10 +146,9 @@ void cexit(void)
 	exit(0);
 }
 
-void execute(char *nom,char *argument)
+void execute(char **argument)
 {
   pid_t pid;
-  char *arguments[] = { nom,argument, NULL };
 
   pid = fork();
   if (pid < 0) {
@@ -154,12 +158,9 @@ void execute(char *nom,char *argument)
 mode_raw(0);
   if (pid==0) {
     /* fils */
-	printf("valeur de nom :'%s',\r\nvaleur de argument:'%s'\r\n",nom,argument);
-   
-	execvp(nom,arguments);
-
+	execvp(argument[0],argument);
     /* on n'arrive ici que si le exec a échoué */
-    printf("impossible d'éxecuter \"%s\" (%s)\r\n",nom,strerror(errno));
+    printf("impossible d'éxecuter \"%s\" (%s)\r\n",argument[0],strerror(errno));
     exit(1);
   }
   else {
