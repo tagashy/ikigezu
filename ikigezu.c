@@ -27,7 +27,6 @@
 void cexit(void);
 void mode_raw(int activer);
 int verifPath();
-int isFile(char* path);
 void unix_clear_screen(void);
 void attent(pid_t pid);
 void execute(char *nom,char *argument);
@@ -41,6 +40,7 @@ int main()
 	memset(tmp,'\0', 100);
 	printf("ikigezu>");
 	while(c != EOF) {
+		mode_raw(1);
 c = getchar();
 switch(c) {
 	case '\r': putc('\r',stdout);
@@ -124,71 +124,14 @@ int verifPath(char input[])
 
 char *fichier;
 char *argument;
-/*
-char *path;
-char cppath[BUFFER];
-char *token;
-*/
-
 char commande[BUFFER];
-/*
-char cptoken[BUFFER];
-int exist;
-char *chemin;
-*/
 strcpy(commande,input);
-/*path = getenv("PATH");*/
 fichier=strtok(commande," ");
 argument=strtok(NULL,"\0");
-/*
-strcpy(cppath,path);
-token=strtok(cppath,SPATH);
- 
-while ( token != NULL )
-{
-	exist=0;
-	strcpy(cptoken,token);
-	strcat(cptoken,ARBORESCENCE);
-	chemin=strcat(cptoken,fichier);
-	exist=isFile(chemin);
-	if (exist)
-	{
-		printf("FOUND : '%s'\r\n",chemin);
-		printf("argument : '%s'\r\n",argument);
-	}
-	
-	token=strtok(NULL,SPATH);
-}
-*/
 execute(fichier,argument);
 return 0;
 }
 
-
-int isFile(char* dir)
-{
-	DIR* directory = opendir(dir);
-	FILE * file = NULL;
- 
-	if(directory == NULL)
-	{
-		file = fopen(dir, "r");
-		if (file == NULL)
-		{
-			return 0;
-		}
-		else
-		{
-			fclose(file);
-			return 1;
-		}
-	}
-	else
-	{
-		closedir(directory);
-		return 1;
-	}
-}
 
 void cexit(void)
 {
@@ -201,18 +144,14 @@ void cexit(void)
 void execute(char *nom,char *argument)
 {
   pid_t pid;
-   if(argument==NULL)
-   {
-	   argument=" ";
-   }
-  char *arguments[] = { argument, NULL };
+  char *arguments[] = { nom,argument, NULL };
 
   pid = fork();
   if (pid < 0) {
     printf("fork a échoué (%s)\r\n",strerror(errno));
     return;
   }
-
+mode_raw(0);
   if (pid==0) {
     /* fils */
 	printf("valeur de nom :'%s',\r\nvaleur de argument:'%s'\r\n",nom,argument);
@@ -227,6 +166,7 @@ void execute(char *nom,char *argument)
     /* père */
     attent(pid);
   }
+  mode_raw(1);
 }
 
 /* attent la fin du processus pid */
@@ -241,8 +181,6 @@ void attent(pid_t pid)
       printf("erreur de waitpid (%s)\r\n",strerror(errno));
       break;
     }
-    if (WIFEXITED(status))
-      printf("terminaison normale, status %i \r\n",WEXITSTATUS(status));
     if (WIFSIGNALED(status))
       printf("terminaison par signal %i \r\n",WTERMSIG(status));
     break;
