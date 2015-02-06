@@ -1,39 +1,32 @@
 #include <termios.h> 
 #include <unistd.h> 
-  #include <dirent.h>
+#include <dirent.h>
 #include <sys/types.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-
 #include <ctype.h>
 #include <errno.h>
-
 #include <fcntl.h>
+
 #define BUFFER 4096
-#ifdef WIN32
-#define SPATH ";"
-#define ARBORESCENCE "\\"
-#elif defined (linux)
-#define SPATH ":"
-#define ARBORESCENCE "/"
-#endif
 #define MAXELEMS 32
+/*definition des fonctions*/
 void cexit(void);
 void init();
+void grandiossa();
+void malentoff();
 void alton();
 void mode_raw(int activer);
 void decoupe(char *input);
-void unix_clear_screen(void);
 void attent(pid_t pid);
 void execute(char **argument);
-
+/*variable géneral indispensable a la gestion de l'input*/
 char *argument[MAXELEMS];
 char c;
 char history[BUFFER];
@@ -68,7 +61,6 @@ switch(c) {
 				else
 				{
 					alton();
-					printf("\r\nYEAH IT'S GOOD\r\n");
 				}
 				printf("ikigezu>");
 			}
@@ -214,5 +206,24 @@ void init()
 }
 void alton()
 {
-	
+	char *cmd=argument[1];
+	if(!strcmp(cmd,"malentoff"))
+	{
+		malentoff();
+	}
+	if(!strcmp(cmd,"grandiossa"))
+	{
+		grandiossa();
+	}
+		
+}
+
+void malentoff()
+{
+	printf("mallentoff \r\n");
+}
+
+void grandiossa()
+{
+	printf("grandiossa \r\n");	
 }
