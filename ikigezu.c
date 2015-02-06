@@ -26,71 +26,91 @@
 #endif
 #define MAXELEMS 32
 void cexit(void);
+void init();
+void alton();
 void mode_raw(int activer);
-int verifPath();
+void decoupe(char *input);
 void unix_clear_screen(void);
 void attent(pid_t pid);
 void execute(char **argument);
 
+char *argument[MAXELEMS];
+char c;
+char history[BUFFER];
+char tmp[BUFFER];
+	
 int main()
 {
-	mode_raw(1);
-	char c;
-	char history[BUFFER];
-	char tmp[BUFFER];
-	memset(tmp,'\0', 100);
-	printf("ikigezu>");
+	init();
 	while(c != EOF) {
 		mode_raw(1);
 c = getchar();
 switch(c) {
 	case '\r': putc('\r',stdout);
 	putc('\n',stdout);
-	if(tmp[0] == '\0') {
-					   printf("ikigezu>");
-				   } else {if(!strcmp(tmp,"exit")||!strcmp(tmp,"quit"))
-					   {
-						   cexit();
-					   }
-					   /*printf("\r\nbuffer='%s'\r\n",tmp);*/
-					   verifPath(tmp);
-					   
-					    printf("ikigezu>");
-				   }
-				   memset(history,'\0', 100);
-				   strncpy(history,tmp,100);
-				   memset(tmp,'\0', 100);
-	break;
+	if(tmp[0] == '\0') 
+	{
+		printf("ikigezu>");
+	} 
+	   else
+		   {
+			   if(!strcmp(tmp,"exit")||!strcmp(tmp,"quit"))
+			   {
+				   cexit();
+			   }
+				memset(history,'\0', BUFFER);
+				strncpy(history,tmp,BUFFER);
+				decoupe(tmp);
+				if(strcmp(argument[0],"alton"))
+				{
+				execute(argument);
+				}
+				else
+				{
+					alton();
+					printf("\r\nYEAH IT'S GOOD\r\n");
+				}
+				printf("ikigezu>");
+			}
+				   
+				   memset(tmp,'\0', BUFFER);
+		break;
 	case EOF:cexit();
-	break;
-	case 3:memset(tmp,'\0', 100);
-	printf("\r\ndefqon1#");
-	break; 
+		break;
+	case 3:memset(tmp,'\0', BUFFER);
+		printf("\r\ndefqon1#");
+		break; 
 	case 4:cexit();
-	break;
+		break;
 	case 8:
-	tmp[strlen(tmp)-1]='\0';
-	printf("\033[1D");
-	putc(' ',stdout);
-	printf("\033[1D");
+		tmp[strlen(tmp)-1]='\0';
+		printf("\033[1D");
+		putc(' ',stdout);
+		printf("\033[1D");
+		break;
 	case 127:
-	tmp[strlen(tmp)-1]='\0';
-	printf("\033[1D");
-	putc(' ',stdout);
-	printf("\033[1D");
-	break;
+		tmp[strlen(tmp)-1]='\0';
+		printf("\033[1D");
+		putc(' ',stdout);
+		printf("\033[1D");
+		break;
 	case 27:c=getchar();
 		if (c=='[')
 		{
+			c=getchar();
 			switch(c){
-				case 'A':putc('A',stdout);
+				case 'A': strncpy(tmp,history,BUFFER);
+				printf("\x0d");
+				printf("\033[K");
+				printf("ikigezu>%s",tmp);
 				break;
 				}
 		}
-	break;
-	default:strncat(tmp, &c, 1);
-	putc(c,stdout);
-	break;
+		break;
+	default:
+		strncat(tmp, &c, 1);
+		putc(c,stdout);
+		break;
 	}
 	}
 	return 0;
@@ -118,27 +138,6 @@ void mode_raw(int activer)
         tcsetattr(STDIN_FILENO, TCSANOW, &cooked); 
   
     raw_actif = activer; 
-}
-
-int verifPath(char input[])
-{
-char* carac=input;
-char *argument[MAXELEMS];
-int i;
-for (i=0; i<MAXELEMS-1; i++) {
-	    if (!*carac) break;
-argument[i]=carac;
-while(*carac && *carac!=' ') carac++;
-if (*carac){
-	*carac='\0';
-	carac++;
-
-}
-	printf("la valeur du pointeur %u est %s\r\n",i,argument[i]);
-}
-argument[i]=NULL;
-execute(argument);
-return 0;
 }
 
 void cexit(void)
@@ -173,6 +172,22 @@ mode_raw(0);
   mode_raw(1);
 }
 
+void decoupe(char *input)
+{
+char* carac=input;
+int i;
+for (i=0; i<MAXELEMS-1; i++) {
+	    if (!*carac) break;
+argument[i]=carac;
+while(*carac && *carac!=' ') carac++;
+if (*carac){
+	*carac='\0';
+	carac++;
+
+}
+}
+argument[i]=NULL;
+}
 /* attent la fin du processus pid */
 void attent(pid_t pid)
 {
@@ -189,4 +204,15 @@ void attent(pid_t pid)
       printf("terminaison par signal %i \r\n",WTERMSIG(status));
     break;
   }
+}
+void init()
+{
+	mode_raw(1);
+	memset(tmp,'\0', BUFFER);
+	memset(history,'\0', BUFFER);
+	printf("ikigezu>");
+}
+void alton()
+{
+	
 }
