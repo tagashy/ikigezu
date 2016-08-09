@@ -1,6 +1,8 @@
 import os
+import socket
 import subprocess
 import sys
+import thread
 
 global tmp
 init_ascii_art="""
@@ -21,7 +23,6 @@ def print_error(msg, niv=0):
 
 def exec_partial(cmd):
     try:
-        # print len(cmd.split('#('))
         os_pythonize_args = cmd.split('#(')
         cmd = str(os_pythonize_args[0])
         if len(os_pythonize_args) >= 2:
@@ -36,11 +37,12 @@ def exec_partial(cmd):
                 else:
                     # print "exec ", tmp_args[0]
                     exec (tmp_args[0])
+        #
         # set locals imported global
+        #
         vals = []
         for val in locals():
-            if (val is not "os_pythonize_args") and (val is not "cmd") and (val is not "tmp_args") and (
-                val is not "tmp"):
+            if (val is not "os_pythonize_args") and (val is not "cmd") and (val is not "tmp_args"):
                 vals.append(val)
         for val in vals:
             globals()[val] = locals()[val]
@@ -54,6 +56,7 @@ def tcp_read(sock):
         while True:
             chunk = sock.recv(9999)
             if chunk == '':
+                print_error("socket closed", 3)
                 raise RuntimeError("socket connection broken")
             else:
                 print "\nTCP<", chunk
@@ -62,8 +65,6 @@ def tcp_read(sock):
 
 
 def tcp_connector():
-    import thread
-    import socket
     global tmp
     addr = "127.0.0.1"
     port = 80
@@ -141,17 +142,19 @@ def exec_cmd(cmd):
         # if not isinstance(python_e, exceptions.SyntaxError) and not isinstance(python_e,exceptions.NameError):
 
         print_error("python err: [{}]".format(python_e))
-        # else:
-        try:
-            args = cmd.split(" ")
-            p_cmd = subprocess.call(args, shell=True)
+        if isinstance(python_e, socket.error):
+            print_error("socket_closed", 2)
 
-        except Exception, os_e:
-            print_error("Sorry error both on python :{}\n and in OS: {}\n".format(python_e, os_e), 1)
+        else:
+            try:
+                args = cmd.split(" ")
+                p_cmd = subprocess.call(args, shell=True)
+
+            except Exception, os_e:
+                print_error("Sorry error both on python :{}\n and in OS: {}\n".format(python_e, os_e), 1)
 
 
 def ikigezu_main():
-    cmd = ""
     print init_ascii_art
     print "to use python inside os cmd use #(your python expression)#"
     while True:
