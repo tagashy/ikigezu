@@ -96,14 +96,19 @@ def script_main(script_path):
     if os.path.isfile(script_path):
         script_file = file(script_path)
         script = script_file.read()
-        script = script.split("def")
-        if len(script) > 1:
-            exec_cmd(script[0])
-            for i in range(1, len(script)):
-                exec_cmd("def" + script[i])
-
-        else:
-            exec_cmd(script[0])
+        script = script.split("\n")
+        i = 0
+        while i < len(script):
+            cmd = script[i]
+            if "class" in cmd or "def" in cmd or "if" in cmd or "elif" in cmd or "else" in cmd:
+                next_instruct = "\t"
+                while next_instruct.startswith("\t") or next_instruct.startswith(" "):
+                    i += 1
+                    if i < len(script):
+                        next_instruct = script[i]
+                        cmd += "\n" + next_instruct
+            i += 1
+            exec_cmd(cmd)
     else:
         print_error("script path is invalid", 3)
         return
