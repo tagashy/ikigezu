@@ -1,13 +1,18 @@
+import os
 import subprocess
+import sys
 
 global tmp
 init_ascii_art="""
 ,_,_,_,_,_,_,_,_,_,_,_|______________________________________________________
 | | |I|K|I|G|E|Z|U| | |_____________________________________________________/
 '-'-'-'-'-'-'-'-'-'-'-|----------------------------------------------------'
-to use python inside os cmd use #(your python expression)#
 """
 
+
+def print_error(msg, niv=0):
+    niveau = ["INFO", 'WARNING', "ERROR", "CRITICAL"]
+    print "[{}]{}".format(niveau[niv], msg)
 
 def exec_partial(cmd):
     try:
@@ -24,17 +29,19 @@ def exec_partial(cmd):
                     cmd += str(tmp)
                     cmd += str(tmp_args[1])
                 else:
-                    print "exec ", tmp_args[0]
+                    # print "exec ", tmp_args[0]
                     exec (tmp_args[0])
-        # LEGB rule bypass
+        # set locals imported global
         vals = []
         for val in locals():
-            vals.append(val)
+            if (val is not "os_pythonize_args") and (val is not "cmd") and (val is not "tmp_args") and (
+                val is not "tmp"):
+                vals.append(val)
         for val in vals:
             globals()[val] = locals()[val]
         return cmd
     except Exception, python_e:
-        print "error in #()# syntax", python_e
+        print_error("error in #()# syntax " + str(python_e), 3)
 
 
 def tcp_read(sock):
@@ -85,38 +92,73 @@ def tcp_connector():
             sock.sendall(send)
 
 
+def script_main(script_path):
+    if os.path.isfile(script_path):
+        script_file = file(script_path)
+        script = script_file.read()
+        script = script.split("def")
+        if len(script) > 1:
+            exec_cmd(script[0])
+            for i in range(1, len(script)):
+                exec_cmd("def" + script[i])
+
+        else:
+            exec_cmd(script[0])
+    else:
+        print_error("script path is invalid", 3)
+        return
 
 
-def main():
-    global tmp
-    tmp = ""
+def exec_cmd(cmd):
+    cmd = exec_partial(cmd)
+    try:
+        if cmd == "exit" or cmd == "quit":
+            exit(1)
+        elif cmd == "tcp_connect":
+            tcp_connector()
+        else:
+            exec (cmd)
+            # LEGB rule bypass
+            vals = []
+            for val in locals():
+                vals.append(val)
+            for val in vals:
+                globals()[val] = locals()[val]
+    except Exception, python_e:
+        # print python_e.__class__
+        # if not isinstance(python_e, exceptions.SyntaxError) and not isinstance(python_e,exceptions.NameError):
+        print_error("python err: [{}]".format(python_e))
+        # else:
+        try:
+            args = cmd.split(" ")
+            p_cmd = subprocess.call(args, shell=True)
+
+        except Exception, os_e:
+            print_error("Sorry error both on python :{}\n and in OS: {}\n".format(python_e, os_e), 1)
+
+
+def ikigezu_main():
     print init_ascii_art
+    print "to use python inside os cmd use #(your python expression)#"
     while True:
         cmd=raw_input("DG>")
-        cmd = exec_partial(cmd)
-        try:
-            if cmd == "exit" or cmd == "quit":
-                exit(1)
-            elif cmd == "tcp_connect":
-                tcp_connector()
-            else:
-                exec (cmd)
-                # LEGB rule bypass
-                vals = []
-                for val in locals():
-                    vals.append(val)
-                for val in vals:
-                    globals()[val] = locals()[val]
-        except Exception,python_e:
-            #print python_e.__class__
-            #if not isinstance(python_e, exceptions.SyntaxError) and not isinstance(python_e,exceptions.NameError):
-                print "python err: [{}]".format(python_e)
-            #else:
-                try:
-                    args=cmd.split(" ")
-                    p_cmd=subprocess.call(args,shell=True)
+        exec_cmd(cmd)
 
-                except Exception,os_e:
-                    print("Sorry error both on python :{}\n and in OS: {}\n".format(python_e,os_e))
 
-main()
+if __name__ == '__main__':
+    argv = []
+    script_path = "none"
+    if len(sys.argv) > 1:
+
+        for i in range(1, len(sys.argv)):
+            if sys.argv[i] == "-s" and i + 1 <= len(sys.argv):
+                script_path = sys.argv[i + 1]
+            argv.append(sys.argv[i])
+    if script_path != "none":
+        script_main(script_path)
+        for val in argv:
+            print val
+            if "-i" == val or "-si" == val:
+                ikigezu_main()
+    else:
+        ikigezu_main()
