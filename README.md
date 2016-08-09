@@ -1,2 +1,0 @@
-# ikigezu
-shell
