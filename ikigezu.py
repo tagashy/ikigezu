@@ -124,9 +124,11 @@ def exec_cmd(cmd):
                 vals.append(val)
             for val in vals:
                 globals()[val] = locals()[val]
+
     except Exception, python_e:
         # print python_e.__class__
         # if not isinstance(python_e, exceptions.SyntaxError) and not isinstance(python_e,exceptions.NameError):
+
         print_error("python err: [{}]".format(python_e))
         # else:
         try:
@@ -138,10 +140,16 @@ def exec_cmd(cmd):
 
 
 def ikigezu_main():
+    cmd = ""
     print init_ascii_art
     print "to use python inside os cmd use #(your python expression)#"
     while True:
         cmd=raw_input("DG>")
+        if "class" in cmd or "def" in cmd or "if" in cmd or "elif" in cmd or "else" in cmd:
+            next_instruct = "\t"
+            while next_instruct.startswith("\t") or next_instruct.startswith(" "):
+                next_instruct = raw_input()
+                cmd += "\n" + next_instruct
         exec_cmd(cmd)
 
 
