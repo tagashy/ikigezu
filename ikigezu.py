@@ -12,7 +12,12 @@ init_ascii_art="""
 
 def print_error(msg, niv=0):
     niveau = ["INFO", 'WARNING', "ERROR", "CRITICAL"]
-    print "[{}]{}".format(niveau[niv], msg)
+    if verbose:
+        print "[{}] {}".format(niveau[niv], msg)
+    elif niv > 1:
+        print "[{}] {}".format(niveau[niv], msg)
+        if niv == 3:
+            exit(-1)
 
 def exec_partial(cmd):
     try:
@@ -41,7 +46,7 @@ def exec_partial(cmd):
             globals()[val] = locals()[val]
         return cmd
     except Exception, python_e:
-        print_error("error in #()# syntax " + str(python_e), 3)
+        print_error("error in #()# syntax " + str(python_e), 2)
 
 
 def tcp_read(sock):
@@ -57,12 +62,13 @@ def tcp_read(sock):
 
 
 def tcp_connector():
+    import thread
+    import socket
     global tmp
     addr = "127.0.0.1"
     port = 80
-    import thread
-    import socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
     print "welcome to ikigezu tcp connector address must be a ip or fqdn followed by port ex: www.google.com:80"
     addr_field = ["none"]
     send_CRLF = raw_input("Would you like to send CRLF after input? [y]/n")
@@ -110,7 +116,7 @@ def script_main(script_path):
             i += 1
             exec_cmd(cmd)
     else:
-        print_error("script path is invalid", 3)
+        print_error("script path is invalid", 2)
         return
 
 
@@ -159,18 +165,22 @@ def ikigezu_main():
 
 
 if __name__ == '__main__':
+    global verbose
+    verbose = False
     argv = []
     script_path = "none"
     if len(sys.argv) > 1:
 
         for i in range(1, len(sys.argv)):
-            if sys.argv[i] == "-s" and i + 1 <= len(sys.argv):
+            if (sys.argv[i] == "-s" or sys.argv[i] == "-si") and i + 1 <= len(sys.argv):
                 script_path = sys.argv[i + 1]
+            if sys.argv[i] == "-v":
+                verbose = True
+
             argv.append(sys.argv[i])
     if script_path != "none":
         script_main(script_path)
         for val in argv:
-            print val
             if "-i" == val or "-si" == val:
                 ikigezu_main()
     else:
