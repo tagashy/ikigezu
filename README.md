@@ -8,6 +8,7 @@ It is possible to execute a script with -s argument and to continue to the inter
 
 
 Order of processing inside the shell:
+
 1. Executing #()# in order and store the result inside command line
 
 2. Try to execute command line in python
