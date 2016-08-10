@@ -9,8 +9,11 @@ It is possible to execute a script with -s argument and to continue to the inter
 
 Order of processing inside the shell:
 1. Executing #()# in order and store the result inside command line
+
 2. Try to execute command line in python
+
 3. If fail try to execute it inside OS shell (with subprocess)
+
 4. Print Error message
 
 
