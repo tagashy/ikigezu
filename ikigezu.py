@@ -1,15 +1,93 @@
 import os
 import socket
+import string
 import subprocess
 import sys
 import thread
 
 global tmp
+global cmd_history
 init_ascii_art="""
 ,_,_,_,_,_,_,_,_,_,_,_|______________________________________________________
 | | |I|K|I|G|E|Z|U| | |_____________________________________________________/
 '-'-'-'-'-'-'-'-'-'-'-|----------------------------------------------------'
 """
+
+
+def save_as(name, data):
+    try:
+        f = open(name, mode="w")
+        f.write(data)
+        f.close()
+    except:
+        print_error("Can't save data")
+
+
+def store_data(cmd):
+    global cmd_history
+    if cmd is not None:
+        cmd_history += cmd
+        cmd_history += "\n"
+
+
+def print_history():
+    global cmd_history
+    i = 0
+    for line in cmd_history.split("\n"):
+        if line != "":
+            print "#{} - {}".format(i, line)
+            i += 1
+
+
+def flush_history():
+    global cmd_history
+    cmd_history = ""
+
+
+def pattern_create(size, pattern_charset=(string.ascii_letters + string.octdigits)):
+    ret = ""
+    pattern_charsets = []
+    patterns_size = len(pattern_charset)
+    # print patterns_size,pattern_charset
+    for i in range(4):
+        pattern_charsets.append(pattern_charset)
+    cpt = 0
+    x = y = z = i = 0
+    while cpt < size:
+
+        patern_index = cpt % 4
+        if patern_index == 0:
+            ret += (pattern_charsets[patern_index])[i]
+            if i >= patterns_size:
+                if z >= patterns_size:
+                    if y >= patterns_size:
+                        if x >= patterns_size:
+                            print_error("Pattern error", 2)
+                        else:
+                            x += 1
+                            y = 0
+                            z = 0
+                            i = 0
+                    else:
+                        y += 1
+                        z = 0
+                        i = 0
+                else:
+                    z += 1
+                    i = 0
+            else:
+                i += 1
+        elif patern_index == 1:
+            ret += (pattern_charsets[patern_index])[z]
+        elif patern_index == 2:
+            ret += (pattern_charsets[patern_index])[y]
+        elif patern_index == 3:
+            ret += (pattern_charsets[patern_index])[x]
+
+        cpt += 1
+    print ret
+    return ret
+
 
 
 def print_error(msg, niv=0):
@@ -123,11 +201,28 @@ def script_main(script_path):
 
 def exec_cmd(cmd):
     cmd = exec_partial(cmd)
+    if cmd != "history":
+        store_data(cmd)
     try:
         if cmd == "exit" or cmd == "quit":
             exit(1)
         elif cmd == "tcp_connect":
             tcp_connector()
+        elif cmd == "history":
+            print_history()
+        elif cmd == "flush_history":
+            flush_history()
+        elif "store" in cmd:
+            if len(cmd.split(" ")) > 1:
+                save_as(cmd.split(" ")[1], cmd_history)
+        elif "pattern_create" in cmd:
+            arg = cmd.split(" ")
+            if len(arg) == 2:
+                print (pattern_create(arg[1]))
+            elif len(arg) == 3:
+                print (pattern_create(arg[1], arg[2]))
+            else:
+                print_error("no size specified", 2)
         else:
             exec (cmd)
             # LEGB rule bypass
@@ -168,6 +263,7 @@ def ikigezu_main():
 
 
 if __name__ == '__main__':
+    cmd_history = ""
     global verbose
     verbose = False
     argv = []
