@@ -39,6 +39,17 @@ def print_history():
             i += 1
 
 
+def exec_history(index):
+    global cmd_history
+    i = 0
+    for line in cmd_history.split("\n"):
+        if line != "":
+            if i == index:
+                exec_cmd(line)
+            # print "#{} - {}".format(i, line)
+            i += 1
+
+
 def flush_history():
     global cmd_history
     cmd_history = ""
@@ -127,6 +138,7 @@ def exec_partial(cmd):
         return cmd
     except Exception, python_e:
         print_error("error in #()# syntax " + str(python_e), 2)
+        return -1
 
 
 def tcp_read(sock):
@@ -199,31 +211,45 @@ def script_main(script_path):
         return
 
 
+def builtin_cmd(cmd):
+    if cmd == "exit" or cmd == "quit":
+        exit(1)
+    elif cmd == "tcp_connect":
+        tcp_connector()
+    elif cmd == "history":
+        print_history()
+    elif cmd == "flush_history":
+        flush_history()
+    elif cmd.startswith("!"):
+        index = int(cmd.split("!")[1])
+        exec_history(index)
+    elif "store" in cmd:
+        if len(cmd.split(" ")) > 1:
+            save_as(cmd.split(" ")[1], cmd_history)
+    elif "pattern_create" in cmd:
+        arg = cmd.split(" ")
+        if len(arg) == 2:
+            print (pattern_create(arg[1]))
+        elif len(arg) == 3:
+            print (pattern_create(arg[1], arg[2]))
+        else:
+            print_error("no size specified", 2)
+
+    # not a builtin cmd
+    else:
+        # print "not builtin"
+        return 1
+
+
 def exec_cmd(cmd):
-    cmd = exec_partial(cmd)
-    if cmd != "history":
+    tmp_ret = exec_partial(cmd)
+    if tmp_ret != -1:
+        cmd = tmp_ret
+    if cmd != "history" and not cmd.startswith("!"):
         store_data(cmd)
     try:
-        if cmd == "exit" or cmd == "quit":
-            exit(1)
-        elif cmd == "tcp_connect":
-            tcp_connector()
-        elif cmd == "history":
-            print_history()
-        elif cmd == "flush_history":
-            flush_history()
-        elif "store" in cmd:
-            if len(cmd.split(" ")) > 1:
-                save_as(cmd.split(" ")[1], cmd_history)
-        elif "pattern_create" in cmd:
-            arg = cmd.split(" ")
-            if len(arg) == 2:
-                print (pattern_create(arg[1]))
-            elif len(arg) == 3:
-                print (pattern_create(arg[1], arg[2]))
-            else:
-                print_error("no size specified", 2)
-        else:
+        # if true not builtin
+        if builtin_cmd(cmd):
             exec (cmd)
             # LEGB rule bypass
             vals = []
@@ -231,7 +257,9 @@ def exec_cmd(cmd):
                 vals.append(val)
             for val in vals:
                 globals()[val] = locals()[val]
-
+        else:
+            pass
+            #print "builtin"
     except Exception, python_e:
         # print python_e.__class__
         # if not isinstance(python_e, exceptions.SyntaxError) and not isinstance(python_e,exceptions.NameError):
